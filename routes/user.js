@@ -27,7 +27,7 @@ const Multipleuploads = upload.fields([
   // Certrficates ROUTES
 router.post('/add/user',Multipleuploads,adduser);
 router.post('/sigin/user',signin);
-router.put('/userupdate',isAuthenticatedUser,Multipleuploads,updateuser);
+router.put('/user/update',isAuthenticatedUser,Multipleuploads,updateuser);
 router.get('/user/logout',isAuthenticatedUser,logout);
 router.get('/user/me',isAuthenticatedUser,meprofile);
 

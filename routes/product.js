@@ -17,6 +17,7 @@ let storage = multer.diskStorage({
     cb(null, filename);
   },
 });
+
 const upload = multer({ storage});
 const Multipleuploads=upload.fields([{ name: 'productpicture' ,minCount: 1},{ name: 'logo', maxCount: 15 }]);
 const { isAuthenticatedUser, authorizeRoles } = require('../middleware/auth');

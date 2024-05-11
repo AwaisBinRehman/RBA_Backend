@@ -88,6 +88,7 @@ const userSchema = new mongoose.Schema(
       enum:['admin','user'],
       default:'user',
     },
+    
     usercertificate: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Certificate'
