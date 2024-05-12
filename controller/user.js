@@ -32,37 +32,64 @@ exports.adduser = async (req, res, next) => {
       cpassword,
     } = req.body;
 
-    const uploadProfile = req.files["upload_profile"][0];
-    const uploadCertificates = req.files["upload_certificate"];
-    const logos = req.files["logo"];
+    const UserObj = {
+      btitle,
+      slug,
+      country,
+      office_Address,
+      applicant_Name,
+      applicant_fName,
+      contact_Number,
+      applicant_Designation,
+      applicant_MotherName,
+      applicant_Birthplace,
+      Individual_Business_Partnership,
+      email,
+      password,
+      cpassword,
+    };
 
-    if (uploadProfile && uploadCertificates && logos) {
-      const UserObj = {
-        btitle,
-        slug,
-        country,
-        office_Address,
-        applicant_Name,
-        applicant_fName,
-        contact_Number,
-        applicant_Designation,
-        applicant_MotherName,
-        applicant_Birthplace,
-        Individual_Business_Partnership,
-        email,
-        password,
-        cpassword,
-        upload_profile: uploadProfile.path,
-        upload_certificate: uploadCertificates.map((file) => file.path),
-        logo: logos.map((file) => file.path),
-      };
+    if (req.files && Object.keys(req.files).length > 0) {
+      const uploadProfile = req.files.upload_profile ?? null;
+      const uploadCertificates = req.files.upload_certificate ?? null;
+      const logos = req.files.logo ?? null;
 
-      const _user = new User(UserObj);
-      await _user.save();
-      res.json({ message: "User registered successfully." });
+      if (uploadProfile) {
+        UserObj.upload_profile = uploadProfile[0].filename;
+      } else {
+        res.status(400).json({ message: "upload_profile is missing." });
+        return;
+      }
+
+      if (uploadCertificates) {
+        const newCertificates = uploadCertificates.map((file) => file.filename);
+        UserObj.upload_certificate = [...newCertificates];
+      } else {
+        res.status(400).json({ message: "upload_profile is missing." });
+        return;
+      }
+
+      if (logos) {
+        const newLogos = logos.map((file) => file.filename);
+        UserObj.logo = [...newLogos];
+      } else {
+        res.status(400).json({ message: "upload_profile is missing." });
+        return;
+      }
     } else {
-      res.status(400).json({ message: "Files are missing." });
+      res.status(400).json({ message: "Files is missing." });
+      return;
     }
+    debugger
+    const existing = await User.findOne({ email });
+    if (existing) {
+      res.status(400).json({ message: "Email Already exist" });
+      return
+    }
+
+    const _user = new User(UserObj);
+    await _user.save();
+    res.json({ message: "User registered successfully." });
     console.log(req.body);
   } catch (error) {
     console.log(error);
@@ -73,9 +100,6 @@ exports.adduser = async (req, res, next) => {
 // User and Admin signin
 exports.signin = catchAsyncErrors(async (req, res, next) => {
   const { email, password } = req.body;
-
-  // checking if user has given password and email both
-
   if (!email || !password) {
     return next(new ErrorHander("Please Enter Email & Password", 400));
   }
@@ -83,18 +107,13 @@ exports.signin = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findOne({ email }).select(
     "+password cpassword email applicant_Name"
   );
-  // const user = await User.findOne({ email });
-
   if (!user) {
     return next(new ErrorHander("Invalid email or password", 401));
   }
-
   const isPasswordMatched = await user.comparePassword(password);
-
   if (!isPasswordMatched) {
     return next(new ErrorHander("Invalid email or password", 401));
   }
-
   sendToken(user, 200, res);
 });
 
@@ -127,13 +146,13 @@ exports.updateuser = catchAsyncErrors(async (req, res) => {
     Individual_Business_Partnership: req.body.Individual_Business_Partnership,
     email: req.body.email,
   };
-  updates.logo = req.body.existing_logos
-  updates.upload_certificate = req.body.existing_certificates
+  updates.logo = req.body.existing_logos;
+  updates.upload_certificate = req.body.existing_certificates;
 
   if (req.files && Object.keys(req.files).length > 0) {
     const uploadProfile = req.files.upload_profile ?? null;
     const uploadCertificates = req.files.upload_certificate ?? null;
-    const logos = req.files.logo ?? mull;
+    const logos = req.files.logo ?? null;
 
     if (uploadProfile) {
       updates.upload_profile = uploadProfile.filename;
@@ -180,15 +199,12 @@ exports.meprofile = catchAsyncErrors(async (req, res, next) => {
 //  delete usere
 exports.deleteUser = catchAsyncErrors(async (req, res, next) => {
   const user = await User.findById(req.params.id);
-
   if (!user) {
     return next(
       new ErrorHander(`User does not exist with Id: ${req.params.id}`, 400)
     );
   }
-
   await user.remove();
-
   res.status(200).json({
     success: true,
     message: "User Deleted Successfully",
@@ -210,12 +226,8 @@ exports.getuser = (req, res) => {
 exports.emailsend = catchAsyncErrors(async (req, res, next) => {
   cron.schedule("2 * * * * *", async () => {
     try {
-      // Retrieve all registered users from the database
       const users = await User.find();
-
-      // Send email to each user
       for (const user of users) {
-        // Use a nodemailer configuration to send emails
         const transporter = nodemailer.createTransport({
           host: "smtp.gmail.com",
           port: 587,
@@ -225,7 +237,6 @@ exports.emailsend = catchAsyncErrors(async (req, res, next) => {
             pass: "qcbwcjmmdsipxqun",
           },
         });
-
         const mailOptions = {
           from: "noshabakhan767@gmail.com",
           to: user.email,
@@ -242,6 +253,7 @@ exports.emailsend = catchAsyncErrors(async (req, res, next) => {
     }
   });
 });
+
 exports.personalemail = catchAsyncErrors(async (req, res, next) => {
   const { recipient, subject, body } = req.body;
   const transporter = nodemailer.createTransport({
@@ -258,9 +270,7 @@ exports.personalemail = catchAsyncErrors(async (req, res, next) => {
     subject: subject,
     body: body,
   });
-  // Save the email document to MongoDB
   email.save();
-
   const mailOptions = {
     from: "noshabakhan767@gmail.com",
     to: recipient,

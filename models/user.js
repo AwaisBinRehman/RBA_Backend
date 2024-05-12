@@ -55,22 +55,18 @@ const userSchema = new mongoose.Schema(
     
     upload_profile: {
       type: String,
-      required: true,
     
     },
     upload_certificate: [{
       type: String,
-      required: true
     }],
     logo: [{
       type: String,
-      required: true
     }],
   
     email: {
       type: String,
       required: true,
-      
     },
     password: {
       type: String,

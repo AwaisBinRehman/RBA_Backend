@@ -160,18 +160,16 @@ exports.getAllProducts = (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: "Authentication required" });
   }
-
-  Product.find({ userId: req.user.id }).exec((error, userProducts) => {
+  Product.find({ userid: req.user.id }).exec((error, userProducts) => {
     if (error) {
       return res.status(500).json({ error: "Internal server error" });
     }
-
     res.status(200).json(userProducts);
   });
 };
 
 exports.getSingleProduct = catchAsyncErrors(async (req, res, next) => {
-  const qr = await Product.findOne({ _id: req.params.id, userId: req.user.id });
+  const qr = await Product.findOne({ _id: req.params.id, userid: req.user.id });
   res.status(200).json({
     success: true,
     qr,
@@ -258,10 +256,10 @@ exports.deleteAllProductsdashboard = async (req, res) => {
 };
 
 exports.deleteAllProducts = async (req, res) => {
-  const userId = req.user.id;
+  const userid = req.user.id;
 
   try {
-    const result = await Product.deleteMany({ userid: userId });
+    const result = await Product.deleteMany({ userid: userid });
 
     if (result.deletedCount > 0) {
       return res.status(200).json({
@@ -288,9 +286,9 @@ exports.getProductCount = catchAsyncErrors(async (req, res, next) => {
 });
 
 // exports.getVendorProducts = (req, res, next) => {
-//   const userId = req.user.id;
+//   const userid = req.user.id;
 
-//   Product.find({ userId  }, (error, products) => {
+//   Product.find({ userid  }, (error, products) => {
 //     if (error) {
 //       return res.status(500).json({ error: 'Error fetching products' });
 //     }
@@ -303,10 +301,10 @@ exports.getProductCount = catchAsyncErrors(async (req, res, next) => {
 //   });
 // };
 exports.getVendorProducts = async (req, res, next) => {
-  const userId = req.user.id;
+  const userid = req.user.id;
 
   try {
-    const user = await User.findById(userId).populate("productid");
+    const user = await User.findById(userid).populate("productid");
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
